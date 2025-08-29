@@ -18,37 +18,31 @@ interface Ebook {
 export const useEbook = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [ebooks, setEbooks] = useState<Ebook[]>(() => {
-        const savedEbooks = localStorage.getItem('ebooks');
-        const parsed = savedEbooks ? JSON.parse(savedEbooks) : [];
-        console.log('Initial ebooks from localStorage:', parsed);
-        return parsed;
+        const savedEbooks = localStorage.getItem("ebooks");
+        return savedEbooks ? JSON.parse(savedEbooks) : [];
     });
     const [error, setError] = useState<string | null>(null);
 
-    const fetchEbooks = useCallback(async (limit: number = 20, offset: number = 0) => {
-        try {
-            setLoading(true);
-            const response = await axios.get('/ebooks', {
-                params: { limit, offset }
-            });
-            console.log('API response ebooks:', response.data);
-            // Filter out invalid ebooks
-            const validEbooks = response.data.filter((ebook: Ebook) => {
-                if (!ebook.cover_path) {
-                    console.warn(`Ebook with ID ${ebook.id} has null cover_path`);
-                    return false;
-                }
-                return true;
-            });
-            setEbooks(validEbooks);
-            localStorage.setItem('ebooks', JSON.stringify(validEbooks));
-        } catch (error) {
-            console.error('Error fetching ebooks:', error);
-            setError('Failed to fetch ebooks');
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    const fetchEbooks = useCallback(
+        async (limit: number = 20, offset: number = 0) => {
+            try {
+                setLoading(true);
+                const response = await axios.get("/ebooks", {
+                    params: { limit, offset },
+                });
+                console.log("API response ebooks:", response.data);
+
+                setEbooks(response.data); // ✅ on met à jour le state
+                localStorage.setItem("ebooks", JSON.stringify(response.data));
+            } catch (error) {
+                console.error("Error fetching ebooks:", error);
+                setError("Failed to fetch ebooks");
+            } finally {
+                setLoading(false);
+            }
+        },
+        []
+    );
 
     // Fetch ebooks on mount
     useEffect(() => {
@@ -58,13 +52,14 @@ export const useEbook = () => {
     const generateEbook = async (formData: FormData) => {
         try {
             setLoading(true);
-            const response = await axios.post('/generate', formData);
-            console.log('Ebook generated:', response.data);
-            // Fetch ebooks again after generating
+            const response = await axios.post("/generate", formData);
+            console.log("Ebook generated:", response.data);
+
+            // ✅ On refetch après génération pour inclure le nouvel ebook
             await fetchEbooks();
         } catch (error) {
-            console.error('Error generating ebook:', error);
-            setError('Failed to generate ebook');
+            console.error("Error generating ebook:", error);
+            setError("Failed to generate ebook");
         } finally {
             setLoading(false);
         }

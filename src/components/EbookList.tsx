@@ -21,7 +21,7 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {ebooks.map((ebook) => (
                 <div key={ebook.id} className="bg-white p-4 shadow-md rounded-lg">
-                    <EbookCard key={ebook.id} ebook={ebook} />
+                    <EbookCard ebook={ebook} />
 
                     {ebook.status !== "SUCCESS" && (
                         <div className="mt-4">
@@ -36,7 +36,7 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
                                 {ebook.files.pdf && (
                                     <li>
                                         <a
-                                            href={ebook.files.pdf}
+                                            href={`http://77.37.124.223:8000/api/ebooks/download/${ebook.id}?format=pdf`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-blue-600 underline"
@@ -48,7 +48,7 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
                                 {ebook.files.epub && (
                                     <li>
                                         <a
-                                            href={ebook.files.epub}
+                                            href={`http://77.37.124.223:8000/api/ebooks/download/${ebook.id}?format=epub`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-blue-600 underline"
