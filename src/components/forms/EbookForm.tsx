@@ -83,7 +83,7 @@ const EbookForm: React.FC<EbookFormProps> = ({ onSubmit, error }) => {
         try {
             await onSubmit(formData);
         } catch (err) {
-            setFormError(`Erreur lors de la soumission : ${err?.message}`);
+            setFormError(`Erreur lors de la soumission : ${err}`);
         }
     };
 

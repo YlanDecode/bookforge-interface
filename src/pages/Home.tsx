@@ -16,7 +16,7 @@ const Home: React.FC = () => {
     return (
         <div className="container mx-auto p-6">
             <h1 className="text-3xl font-bold text-center mb-6">Welcome to BookForge</h1>
-            {ebooks.length === 0 ? (
+            {ebooks?.length === 0 ? (
                 <p>No ebooks available.</p>
             ) : (
                 <EbookList ebooks={ebooks} />

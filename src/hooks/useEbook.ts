@@ -15,12 +15,16 @@ interface Ebook {
     };
 }
 
+interface EbookResponse {
+    taskId: string
+    websocket: string;
+    download_urls: [string];
+}
+
 export const useEbook = () => {
     const [loading, setLoading] = useState<boolean>(false);
-    const [ebooks, setEbooks] = useState<Ebook[]>(() => {
-        const savedEbooks = localStorage.getItem("ebooks");
-        return savedEbooks ? JSON.parse(savedEbooks) : [];
-    });
+    const [ebooks, setEbooks] = useState<Ebook[]>();
+    const [ebookResponse, setEbooksResponse] = useState<EbookResponse>();
     const [error, setError] = useState<string | null>(null);
 
     const fetchEbooks = useCallback(
@@ -31,9 +35,7 @@ export const useEbook = () => {
                     params: { limit, offset },
                 });
                 console.log("API response ebooks:", response.data);
-
-                setEbooks(response.data); // ✅ on met à jour le state
-                localStorage.setItem("ebooks", JSON.stringify(response.data));
+                setEbooks(response.data);
             } catch (error) {
                 console.error("Error fetching ebooks:", error);
                 setError("Failed to fetch ebooks");
@@ -54,8 +56,12 @@ export const useEbook = () => {
             setLoading(true);
             const response = await axios.post("/generate", formData);
             console.log("Ebook generated:", response.data);
-
-            // ✅ On refetch après génération pour inclure le nouvel ebook
+            setEbooksResponse(response.data);
+            console.log("Ebook ws generated:", response.data?.websocket);
+            if (response.data?.task_id && response.data?.websocket) {
+                localStorage.setItem(`websocket${response.data.task_id}`, response.data.websocket);
+                console.log("localstorage:", localStorage.getItem(`websocket${response.data.task_id}`));
+            }
             await fetchEbooks();
         } catch (error) {
             console.error("Error generating ebook:", error);
@@ -65,5 +71,5 @@ export const useEbook = () => {
         }
     };
 
-    return { generateEbook, fetchEbooks, ebooks, loading, error };
+    return { generateEbook, fetchEbooks, ebooks, loading, error, ebookResponse };
 };
