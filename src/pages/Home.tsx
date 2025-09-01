@@ -11,8 +11,12 @@ const Home: React.FC = () => {
         fetchEbooks();
     }, [fetchEbooks]);
 
-    if (loading) return <p>Loading ebooks...</p>;
-    if (error) return <p className="text-red-500">Error: {error}</p>;
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center py-16 animate-fade-in">
+            <Loader2 size={48} className="text-gray-400 animate-spin mb-4" />
+            <p className="text-gray-500 text-lg">Chargement des ebooks...</p>
+        </div>
+    );
 
     return (
         <div className="container mx-auto p-6">
@@ -46,7 +50,12 @@ const Home: React.FC = () => {
             </section>
 
             <section id="ebooks" className="animate-fade-in-up">
-                {ebooks?.length === 0 ? (
+                {error ? (
+                    <div className="flex flex-col items-center justify-center py-16">
+                        <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" className="mb-4 text-gray-300"><circle cx="24" cy="24" r="20"/><path d="M24 16v8"/><circle cx="24" cy="32" r="2"/></svg>
+                        <p className="text-gray-600 text-lg text-center max-w-md">Le serveur rencontre un problème.<br/>Veuillez réessayer dans quelques instants.<br/><span className="text-xs text-gray-400">(Si le problème persiste, contactez l’administrateur.)</span></p>
+                    </div>
+                ) : ebooks?.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16">
                         <svg width="64" height="64" fill="none" stroke="currentColor" strokeWidth="1.5" className="mb-4 text-gray-300"><rect x="12" y="12" width="40" height="40" rx="8"/><path d="M24 24h16v16H24z"/></svg>
                         <p className="text-gray-500 text-lg">Aucun ebook disponible pour le moment.<br/>Générez-en un pour commencer votre collection !</p>

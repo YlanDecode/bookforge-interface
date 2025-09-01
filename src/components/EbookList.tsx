@@ -20,7 +20,14 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
     const [progressMap, setProgressMap] = React.useState<{ [taskId: string]: number }>({});
     const [, setWsDebugMap] = React.useState<{ [taskId: string]: string }>({});
     const [state, setState] = React.useState("");
-    const [elapsed_seconds, setSeconds] = React.useState("");
+    const [elapsed_seconds, setSeconds] = React.useState<string>(() => {
+        // On récupère la valeur stockée au reload pour le premier ebook (améliorable pour multi-ebooks)
+        if (ebooks && ebooks.length > 0) {
+            const val = localStorage.getItem(`elapsed_seconds_${ebooks[0].id}`);
+            return val || "0";
+        }
+        return "0";
+    });
     const wsRefs = React.useRef<{ [taskId: string]: WebSocket }>({});
     useEffect(() => {
     console.log('EbookList useEffect triggered. ebooks:', ebooks);
@@ -47,6 +54,8 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
                         console.log('WebSocket message for ebook', ebook.id, data);
                         setState(data.state)
                         setSeconds(data.elapsed_seconds)
+                        // Stocke la valeur dans localStorage pour ce ebook
+                        localStorage.setItem(`elapsed_seconds_${ebook.id}`, String(data.elapsed_seconds));
                     };
                     ws.onclose = () => {
                         ws.close();
@@ -97,10 +106,23 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
                     )}
 
                     {ebook.status === "SUCCESS" && (
-                        <div className="mt-4 p-4 bg-white border border-gray-100 rounded-xl shadow flex flex-col items-center animate-fade-in">
+                        <div
+                            className="mt-4 p-4 bg-white border border-gray-100 rounded-xl shadow flex flex-col items-center animate-fade-in">
                             <h4 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400"><circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" fill="none"/><path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+                                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5"
+                                     className="text-gray-400">
+                                    <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" fill="none"/>
+                                    <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="2" fill="none"/>
+                                </svg>
                                 Téléchargements disponibles
+                            </h4>
+                            <h4 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5"
+                                     className="text-gray-400">
+                                    <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" fill="none"/>
+                                    <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="2" fill="none"/>
+                                </svg>
+                                Temps passés : {elapsed_seconds}
                             </h4>
                             <ul className="list-none space-y-2 w-full">
                                 {ebook.files.pdf && (
@@ -111,7 +133,12 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-2 text-gray-700 hover:text-gray-900 font-semibold transition-colors"
                                         >
-                                            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400"><rect x="4" y="4" width="10" height="10" rx="2"/><path d="M9 7v4"/><path d="M7 11h4"/></svg>
+                                            <svg width="18" height="18" fill="none" stroke="currentColor"
+                                                 strokeWidth="1.5" className="text-gray-400">
+                                                <rect x="4" y="4" width="10" height="10" rx="2"/>
+                                                <path d="M9 7v4"/>
+                                                <path d="M7 11h4"/>
+                                            </svg>
                                             PDF
                                         </a>
                                     </li>
@@ -124,7 +151,14 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-2 text-gray-700 hover:text-gray-900 font-semibold transition-colors"
                                         >
-                                            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400"><circle cx="9" cy="9" r="8" stroke="currentColor" strokeWidth="2" fill="none"/><text x="9" y="13" textAnchor="middle" fontSize="8" fill="currentColor">EPUB</text></svg>
+                                            <svg width="18" height="18" fill="none" stroke="currentColor"
+                                                 strokeWidth="1.5" className="text-gray-400">
+                                                <circle cx="9" cy="9" r="8" stroke="currentColor" strokeWidth="2"
+                                                        fill="none"/>
+                                                <text x="9" y="13" textAnchor="middle" fontSize="8"
+                                                      fill="currentColor">EPUB
+                                                </text>
+                                            </svg>
                                             EPUB
                                         </a>
                                     </li>
@@ -137,35 +171,35 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
         </div>
     );
 // Animations CSS (à ajouter dans index.css ou App.css)
-/*
-.animate-fade-in-up {
-    animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
-}
-.animate-fade-in {
-    animation: fadeIn 0.7s cubic-bezier(.39,.575,.565,1) both;
-}
-.animate-spin-slow {
-    animation: spin 2s linear infinite;
-}
-.animate-pulse {
-    animation: pulse 1.5s infinite;
-}
-@keyframes fadeInUp {
-    0% { opacity: 0; transform: translateY(30px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-}
-@keyframes spin {
-    100% { transform: rotate(360deg); }
-}
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: .5; }
-}
-*/
+    /*
+    .animate-fade-in-up {
+        animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.7s cubic-bezier(.39,.575,.565,1) both;
+    }
+    .animate-spin-slow {
+        animation: spin 2s linear infinite;
+    }
+    .animate-pulse {
+        animation: pulse 1.5s infinite;
+    }
+    @keyframes fadeInUp {
+        0% { opacity: 0; transform: translateY(30px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+    @keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: .5; }
+    }
+    */
 };
 
 export default EbookList;
