@@ -20,18 +20,20 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
     const [progressMap, setProgressMap] = React.useState<{ [taskId: string]: number }>({});
     const [, setWsDebugMap] = React.useState<{ [taskId: string]: string }>({});
     const [state, setState] = React.useState("");
-    const [elapsed_seconds, setSeconds] = React.useState<string>(() => {
-        // On récupère la valeur stockée au reload pour le premier ebook (améliorable pour multi-ebooks)
-        if (ebooks && ebooks.length > 0) {
-            const val = localStorage.getItem(`elapsed_seconds_${ebooks[0].id}`);
-            return val || "0";
+    const [elapsedMap, setElapsedMap] = React.useState<{ [id: string]: number }>(() => {
+        const map: { [id: string]: number } = {};
+        if (ebooks) {
+            ebooks.forEach(ebook => {
+                const val = localStorage.getItem(`elapsed_seconds_${ebook.id}`);
+                map[ebook.id] = val ? parseInt(val) : 0;
+            });
         }
-        return "0";
+        return map;
     });
     const wsRefs = React.useRef<{ [taskId: string]: WebSocket }>({});
     useEffect(() => {
-    console.log('EbookList useEffect triggered. ebooks:', ebooks);
-    ebooks?.map((ebook) => {
+        console.log('EbookList useEffect triggered. ebooks:', ebooks);
+        ebooks?.forEach((ebook) => {
             if (
                 ebook.status !== "SUCCESS" &&
                 ebook.id
@@ -53,9 +55,11 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
                         setWsDebugMap((prev) => ({ ...prev, [String(ebook.task_id)]: data }));
                         console.log('WebSocket message for ebook', ebook.id, data);
                         setState(data.state)
-                        setSeconds(data.elapsed_seconds)
-                        // Stocke la valeur dans localStorage pour ce ebook
-                        localStorage.setItem(`elapsed_seconds_${ebook.id}`, String(data.elapsed_seconds));
+                        setElapsedMap((prev) => {
+                            const updated = { ...prev, [ebook.id]: data.elapsed_seconds };
+                            localStorage.setItem(`elapsed_seconds_${ebook.id}`, String(data.elapsed_seconds));
+                            return updated;
+                        });
                     };
                     ws.onclose = () => {
                         ws.close();
@@ -66,7 +70,7 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
                 }
             }
         });
-    }, []);
+    }, [ebooks]);
 
     function formatDuration(seconds: number): string {
         if (seconds < 60) return `${seconds} seconde${seconds > 1 ? 's' : ''}`;
@@ -98,7 +102,7 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
                                 ></div>
                             </div>
                             <p className="text-xs mt-2 text-gray-500 font-medium animate-pulse">Chargement: {progressMap[ebook.id] || 0}%</p>
-                            <span className="text-xs text-gray-400 mt-1">Temps écoulé : <strong>{formatDuration(parseInt(elapsed_seconds))}</strong></span>
+                            <span className="text-xs text-gray-400 mt-1">Temps écoulé : <strong>{formatDuration(elapsedMap[ebook.id] || 0)}</strong></span>
                             {state === "SUCCESS" && (
                                 <p className="text-xs text-gray-600 mt-2 animate-fade-in">Veuillez actualiser la page pour voir les liens de téléchargement.</p>
                             )}
@@ -122,7 +126,7 @@ const EbookList: React.FC<EbookListProps> = ({ ebooks }) => {
                                     <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" fill="none"/>
                                     <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="2" fill="none"/>
                                 </svg>
-                                Temps passés : {elapsed_seconds}
+                                Temps passés : {formatDuration(elapsedMap[ebook.id] || 0)}
                             </h4>
                             <ul className="list-none space-y-2 w-full">
                                 {ebook.files.pdf && (
